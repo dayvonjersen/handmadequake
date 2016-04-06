@@ -24,6 +24,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "errno.h"
 #include "resource.h"
 #include "conproc.h"
+#include <direct.h>
 
 #define MINIMUM_WIN_MEMORY		0x0880000
 #define MAXIMUM_WIN_MEMORY		0x1000000
@@ -68,7 +69,7 @@ Sys_PageIn
 void Sys_PageIn (void *ptr, int size)
 {
 	byte	*x;
-	int		j, m, n;
+	int		m, n;
 
 // touch all the memory to make sure it's there. The 16-page skip is to
 // keep Win 95 from thinking we're trying to page ourselves in (we are
@@ -326,7 +327,7 @@ void Sys_Init (void)
 	Sys_InitFloatTime ();
 
 	vinfo.dwOSVersionInfoSize = sizeof(vinfo);
-
+	/*
 	if (!GetVersionEx (&vinfo))
 		Sys_Error ("Couldn't get OS info");
 
@@ -340,6 +341,8 @@ void Sys_Init (void)
 		WinNT = true;
 	else
 		WinNT = false;
+	*/
+	WinNT = true;
 }
 
 
@@ -557,8 +560,8 @@ char *Sys_ConsoleInput (void)
 	static char	text[256];
 	static int		len;
 	INPUT_RECORD	recs[1024];
-	int		count;
-	int		i, dummy;
+//	int		count;
+	int		/*i,*/ dummy;
 	int		ch, numread, numevents;
 
 	if (!isDedicated)
@@ -691,7 +694,7 @@ HWND		hwnd_dialog;
 
 int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
-    MSG				msg;
+//    MSG				msg;
 	quakeparms_t	parms;
 	double			time, oldtime, newtime;
 	MEMORYSTATUS	lpBuffer;

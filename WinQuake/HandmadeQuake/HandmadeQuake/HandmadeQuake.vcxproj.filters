@@ -401,5 +401,8 @@
     <ClInclude Include="..\..\zone.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\net_ser.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
