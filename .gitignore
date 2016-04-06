@@ -255,4 +255,5 @@ paket-files/
 .idea/
 *.sln.iml
 
-
+# *cough*
+WinQuake/HandmadeQuake/HandmadeQuake/ID1/
