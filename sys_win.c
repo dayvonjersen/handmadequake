@@ -11,9 +11,18 @@ typedef uint32_t uint32;
 int32 argc = 0;
 uint8 *largv[MAX_NUM_ARGVS+1];
 
+int32 Q_strcmp(uint8 *s1, uint8 *s2) {
+	while (*s1 == *s2) {
+		if (!*s1) return 0;
+		++s1;
+		++s2;
+	}
+	return (*s1 < *s2) ? -1 : 1;
+}
+
 int32 COM_CheckParm(uint8 *parm) {
 	for (int32 i = 0; i < argc; i++) {
-		if (!strcmp(parm, largv[i])) {
+		if (!Q_strcmp(parm, largv[i])) {
 			return i;
 		}
 	}
