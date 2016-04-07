@@ -1,5 +1,33 @@
 #include "quakedef.h"
 
+void Q_strcpy(uint8 *dest, uint8 *src) {
+	while (*src) {
+		*dest++ = *src++;
+	}
+	*dest = 0;
+}
+
+void Q_strncpy(uint8 *dest, uint8 *src, int32 count) {
+	if (count < 0) return;
+
+	while (*src && count) {
+		*dest++ = *src++;
+		--count;
+	}
+	while (count) {
+		*dest++ = 0;	
+		--count;
+	}
+}
+
+int32 Q_strlen(uint8 *str) {
+	int32 count = 0;
+	while (*str++) {
+		++count;
+	}
+	return count;
+}
+
 int32 Q_strcmp(uint8 *s1, uint8 *s2) {
 	while (*s1 == *s2) {
 		if (!*s1) return 0;
@@ -7,13 +35,6 @@ int32 Q_strcmp(uint8 *s1, uint8 *s2) {
 		++s2;
 	}
 	return (*s1 < *s2) ? -1 : 1;
-}
-
-void Q_strcpy(uint8 *dest, uint8 *src) {
-	while (*src) {
-		*dest++ = *src++;
-	}
-	*dest = 0;
 }
 
 int32 Q_atoi(uint8 *str) {
