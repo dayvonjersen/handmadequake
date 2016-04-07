@@ -25,7 +25,7 @@ void COM_ParseCmdLine(uint8 *lpCmdLine) {
 }
 
 int32 COM_CheckParm(uint8 *parm) {
-	for (int32 i = 0; i < com_argc; i++) {
+	for (int32 i = 0; i < com_argc; ++i) {
 		if (!Q_strcmp(parm, com_argv[i])) {
 			return i;
 		}

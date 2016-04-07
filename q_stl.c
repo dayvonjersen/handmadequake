@@ -9,6 +9,13 @@ int32 Q_strcmp(uint8 *s1, uint8 *s2) {
 	return (*s1 < *s2) ? -1 : 1;
 }
 
+void Q_strcpy(uint8 *dest, uint8 *src) {
+	while (*src) {
+		*dest++ = *src++;
+	}
+	*dest = 0;
+}
+
 int32 Q_atoi(uint8 *str) {
 	int32 sign = 1;
 	int32 val = 0;
