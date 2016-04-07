@@ -1,12 +1,18 @@
+#include <stdint.h>
 #include <Windows.h>
+
+typedef int8_t int8;
+typedef uint8_t uint8;
+typedef int32_t int32;
+typedef uint32_t uint32;
 
 #define MAX_NUM_ARGVS 50
 
-int argc = 0;
-char *largv[MAX_NUM_ARGVS];
+int32 argc = 0;
+uint8 *largv[MAX_NUM_ARGVS+1];
 
-int COM_CheckParm(char *parm) {
-	for (int i = 0; i < argc; i++) {
+int32 COM_CheckParm(uint8 *parm) {
+	for (int32 i = 0; i < argc; i++) {
 		if (!strcmp(parm, largv[i])) {
 			return i;
 		}
@@ -14,10 +20,10 @@ int COM_CheckParm(char *parm) {
 	return 0;
 }
 
-int	CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
+int32 CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int32 nCmdShow) {
 	largv[0] = "";
 
-	while (*lpCmdLine && argc < MAX_NUM_ARGVS) {
+	while (*lpCmdLine && argc < MAX_NUM_ARGVS+1) {
 		while (*lpCmdLine && ( *lpCmdLine <= 32 || *lpCmdLine > 126 ) ) {
 			lpCmdLine++;
 		}
@@ -33,10 +39,9 @@ int	CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 			}
 		}
 	}
-
-	largv[argc] = "";
-
-	int test = COM_CheckParm("-setalpha");
+	
+	int32 test = COM_CheckParm("-setalpha");
+	int32 value = atoi(largv[test + 1]);
 		
 	return 0;
 }
