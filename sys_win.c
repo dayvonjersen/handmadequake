@@ -1,5 +1,8 @@
+
 #include "winquake.h"
 #include "quakedef.h"
+
+#include <stdio.h>
 
 BOOL IsRunning = TRUE;
 
@@ -9,8 +12,9 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam , LPARAM lParam
 	case WM_KEYUP:
 		IsRunning = FALSE;
 		break;
+	case WM_ACTIVATE:
+	case WM_CREATE:
 	case WM_DESTROY:
-		IsRunning = FALSE;
 		break;
 	default:
 		Result = DefWindowProc(hWnd, uMsg, wParam, lParam);
@@ -42,7 +46,7 @@ int32 CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmd
 
 	AdjustWindowRect(&r, WindowStyle, FALSE);
 
-	HWND mainwindow = CreateWindowEx(0, "Module 2", "Lesson 2.1", WindowStyle, 200, 200, r.right - r.left, r.bottom - r.top, NULL, NULL, hInstance, 0);
+	HWND mainwindow = CreateWindowEx(0, "Module 2", "Lesson 2.3", WindowStyle, 200, 200, r.right - r.left, r.bottom - r.top, NULL, NULL, hInstance, 0);
 	ShowWindow(mainwindow, SW_SHOWDEFAULT);
 
 
@@ -50,12 +54,35 @@ int32 CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmd
 	PatBlt(DeviceContext, 0, 0, 800, 600, BLACKNESS);
 	ReleaseDC(mainwindow, DeviceContext);
 
+	LARGE_INTEGER Frequency;
+	QueryPerformanceFrequency(&Frequency);
+
+	double SecondsPerTick = 1.0 / (double)Frequency.QuadPart;
+
+	LARGE_INTEGER Tick, Tock;
+	QueryPerformanceCounter(&Tick);
+
 	MSG msg;
 	while (IsRunning) {
 		if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 		}
+
+		// Update game
+		// Draw graphics
+		
+		QueryPerformanceCounter(&Tock);
+
+		__int64 Interval = Tock.QuadPart - Tick.QuadPart;
+
+		double SecondsGoneBy = (double)Interval * SecondsPerTick;
+
+		QueryPerformanceCounter(&Tick);
+
+		char buf[64];
+		sprintf_s(buf, 64, "Total time: %3.7f \n", SecondsGoneBy);
+		OutputDebugString(buf);
 	}
 
 	return 0;
