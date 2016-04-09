@@ -1,8 +1,21 @@
 #include "winquake.h"
 #include "quakedef.h"
 
+BOOL IsRunning = TRUE;
+
 LRESULT CALLBACK MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam , LPARAM lParam) {
-	return DefWindowProc(hWnd, uMsg, wParam, lParam);
+	LRESULT Result = 0;
+	switch (uMsg) {
+	case WM_KEYUP:
+		IsRunning = FALSE;
+		break;
+	case WM_DESTROY:
+		IsRunning = FALSE;
+		break;
+	default:
+		Result = DefWindowProc(hWnd, uMsg, wParam, lParam);
+	}
+	return Result;
 }
 
 int32 CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int32 nCmdShow) {
@@ -36,6 +49,14 @@ int32 CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmd
 	HDC DeviceContext = GetDC(mainwindow);
 	PatBlt(DeviceContext, 0, 0, 800, 600, BLACKNESS);
 	ReleaseDC(mainwindow, DeviceContext);
+
+	MSG msg;
+	while (IsRunning) {
+		if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
+		}
+	}
 
 	return 0;
 }
