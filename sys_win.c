@@ -6,16 +6,23 @@
 
 BOOL IsRunning = TRUE;
 
+void Sys_Shutdown(void) {
+	IsRunning = FALSE;
+}
+
 LRESULT CALLBACK MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam , LPARAM lParam) {
 	LRESULT Result = 0;
 	switch (uMsg) {
-	case WM_KEYUP:
-		IsRunning = FALSE;
-		break;
 	case WM_ACTIVATE:
-	case WM_CREATE:
-	case WM_DESTROY:
 		break;
+
+	case WM_CREATE:
+		break;
+
+	case WM_DESTROY:
+		Sys_Shutdown();
+		break;
+
 	default:
 		Result = DefWindowProc(hWnd, uMsg, wParam, lParam);
 	}
@@ -46,7 +53,7 @@ int32 CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmd
 
 	AdjustWindowRect(&r, WindowStyle, FALSE);
 
-	HWND mainwindow = CreateWindowEx(0, "Module 2", "Lesson 2.3", WindowStyle, 200, 200, r.right - r.left, r.bottom - r.top, NULL, NULL, hInstance, 0);
+	HWND mainwindow = CreateWindowEx(0, "Module 2", "Lesson 2.4", WindowStyle, CW_USEDEFAULT, CW_USEDEFAULT, r.right - r.left, r.bottom - r.top, NULL, NULL, hInstance, 0);
 	ShowWindow(mainwindow, SW_SHOWDEFAULT);
 
 
@@ -64,7 +71,7 @@ int32 CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmd
 
 	MSG msg;
 	while (IsRunning) {
-		if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+		while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 		}
