@@ -58,7 +58,7 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam , LPARAM lParam
 }
 
 int32 CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int32 nCmdShow) {
-	//COM_ParseCmdLine(lpCmdLine);
+	COM_ParseCmdLine(lpCmdLine);
 	//int32 test = COM_CheckParm("-setalpha");
 	//int32 value = Q_atoi(com_argv[test + 1]);
 
@@ -81,7 +81,7 @@ int32 CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmd
 
 	AdjustWindowRect(&r, WindowStyle, FALSE);
 
-	HWND mainwindow = CreateWindowEx(0, "Module 2", "Lesson 2.5", WindowStyle, CW_USEDEFAULT, CW_USEDEFAULT, r.right - r.left, r.bottom - r.top, NULL, NULL, hInstance, 0);
+	HWND mainwindow = CreateWindowEx(0, "Module 2", "Lesson 2.6", WindowStyle, CW_USEDEFAULT, CW_USEDEFAULT, r.right - r.left, r.bottom - r.top, NULL, NULL, hInstance, 0);
 	ShowWindow(mainwindow, SW_SHOWDEFAULT);
 	
 	HDC DeviceContext = GetDC(mainwindow);
@@ -89,9 +89,7 @@ int32 CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmd
 	ReleaseDC(mainwindow, DeviceContext);
 	
 	float oldtime = Sys_InitFloatTime();
-	float TargetTime = 1.f / 60.f;
-	float TimeAccumulated = 0.f;
-
+	
 	MSG msg;
 	while (IsRunning) {
 		while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
@@ -100,13 +98,8 @@ int32 CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmd
 		}
 
 		float newtime = Sys_FloatTime();
-		TimeAccumulated += newtime - oldtime;
+		Host_Frame(newtime - oldtime);
 		oldtime = newtime;
-
-		if (TimeAccumulated > TargetTime) {
-			Host_Frame(TargetTime);
-			TimeAccumulated -= TargetTime;
-		}
 	}
 
 	Host_Shutdown();
