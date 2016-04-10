@@ -89,6 +89,8 @@ int32 CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmd
 	ReleaseDC(mainwindow, DeviceContext);
 	
 	float oldtime = Sys_InitFloatTime();
+	float TargetTime = 1.f / 60.f;
+	float TimeAccumulated = 0.f;
 
 	MSG msg;
 	while (IsRunning) {
@@ -98,8 +100,13 @@ int32 CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmd
 		}
 
 		float newtime = Sys_FloatTime();
-		Host_Frame(newtime - oldtime);
+		TimeAccumulated += newtime - oldtime;
 		oldtime = newtime;
+
+		if (TimeAccumulated > TargetTime) {
+			Host_Frame(TargetTime);
+			TimeAccumulated -= TargetTime;
+		}
 	}
 
 	Host_Shutdown();
