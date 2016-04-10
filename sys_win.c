@@ -6,6 +6,36 @@
 
 BOOL IsRunning = TRUE;
 
+static double GTimePassed = 0.0;
+static double SecondsPerTick = 0.0;
+static __int64 GTimeCount = 0;
+
+float Sys_InitFloatTime(void) {
+	LARGE_INTEGER Frequency;
+	QueryPerformanceFrequency(&Frequency);
+
+	SecondsPerTick = 1.0 / (double)Frequency.QuadPart;
+
+	LARGE_INTEGER Counter;
+	QueryPerformanceCounter(&Counter);
+	GTimeCount = Counter.QuadPart;
+
+	return 0.f;
+}
+
+float Sys_FloatTime(void) {
+	LARGE_INTEGER Counter;
+	QueryPerformanceCounter(&Counter);
+
+	__int64 Interval = Counter.QuadPart - GTimeCount;
+	GTimeCount = Counter.QuadPart;
+
+	double SecondsGoneBy = (double)Interval * SecondsPerTick;
+	GTimePassed += SecondsGoneBy;
+
+	return (float)GTimePassed;
+}
+
 void Sys_Shutdown(void) {
 	IsRunning = FALSE;
 }
@@ -55,19 +85,12 @@ int32 CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmd
 
 	HWND mainwindow = CreateWindowEx(0, "Module 2", "Lesson 2.4", WindowStyle, CW_USEDEFAULT, CW_USEDEFAULT, r.right - r.left, r.bottom - r.top, NULL, NULL, hInstance, 0);
 	ShowWindow(mainwindow, SW_SHOWDEFAULT);
-
-
+	
 	HDC DeviceContext = GetDC(mainwindow);
 	PatBlt(DeviceContext, 0, 0, 800, 600, BLACKNESS);
 	ReleaseDC(mainwindow, DeviceContext);
-
-	LARGE_INTEGER Frequency;
-	QueryPerformanceFrequency(&Frequency);
-
-	double SecondsPerTick = 1.0 / (double)Frequency.QuadPart;
-
-	LARGE_INTEGER Tick, Tock;
-	QueryPerformanceCounter(&Tick);
+	
+	float timecount = Sys_InitFloatTime();
 
 	MSG msg;
 	while (IsRunning) {
@@ -76,19 +99,10 @@ int32 CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmd
 			DispatchMessage(&msg);
 		}
 
-		// Update game
-		// Draw graphics
-		
-		QueryPerformanceCounter(&Tock);
-
-		__int64 Interval = Tock.QuadPart - Tick.QuadPart;
-
-		double SecondsGoneBy = (double)Interval * SecondsPerTick;
-
-		QueryPerformanceCounter(&Tick);
+		float newtime = Sys_FloatTime();
 
 		char buf[64];
-		sprintf_s(buf, 64, "Total time: %3.7f \n", SecondsGoneBy);
+		sprintf_s(buf, 64, "Total time: %3.7f \n", newtime);
 		OutputDebugString(buf);
 	}
 
