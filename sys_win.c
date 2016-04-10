@@ -2,8 +2,6 @@
 #include "winquake.h"
 #include "quakedef.h"
 
-#include <stdio.h>
-
 BOOL IsRunning = TRUE;
 
 static double GTimePassed = 0.0;
@@ -83,14 +81,14 @@ int32 CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmd
 
 	AdjustWindowRect(&r, WindowStyle, FALSE);
 
-	HWND mainwindow = CreateWindowEx(0, "Module 2", "Lesson 2.4", WindowStyle, CW_USEDEFAULT, CW_USEDEFAULT, r.right - r.left, r.bottom - r.top, NULL, NULL, hInstance, 0);
+	HWND mainwindow = CreateWindowEx(0, "Module 2", "Lesson 2.5", WindowStyle, CW_USEDEFAULT, CW_USEDEFAULT, r.right - r.left, r.bottom - r.top, NULL, NULL, hInstance, 0);
 	ShowWindow(mainwindow, SW_SHOWDEFAULT);
 	
 	HDC DeviceContext = GetDC(mainwindow);
 	PatBlt(DeviceContext, 0, 0, 800, 600, BLACKNESS);
 	ReleaseDC(mainwindow, DeviceContext);
 	
-	float timecount = Sys_InitFloatTime();
+	float oldtime = Sys_InitFloatTime();
 
 	MSG msg;
 	while (IsRunning) {
@@ -100,11 +98,11 @@ int32 CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmd
 		}
 
 		float newtime = Sys_FloatTime();
-
-		char buf[64];
-		sprintf_s(buf, 64, "Total time: %3.7f \n", newtime);
-		OutputDebugString(buf);
+		Host_Frame(newtime - oldtime);
+		oldtime = newtime;
 	}
+
+	Host_Shutdown();
 
 	return 0;
 }
