@@ -7,10 +7,12 @@ static int BufferWidth = 640;
 static int BufferHeight = 480;
 static int BytesPerPixel = 4;
 
-void *BackBuffer;
+void *BackBuffer = NULL;
 
 BOOL Fullscreen = FALSE;
 BITMAPINFO BitMapInfo = { 0 };
+
+WNDCLASS wc = { 0 };
 HWND MainWindow;
 
 LRESULT CALLBACK MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
@@ -22,9 +24,21 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	case WM_CREATE:
 		break;
 
-	case WM_KEYUP:
 	case WM_DESTROY:
-		Sys_Shutdown();
+		break;
+
+	case WM_KEYDOWN:
+		switch (wParam) {
+		case 'W': break;
+		case 'A':
+			VID_SetMode(640, 480); break;
+		case 'S':
+			VID_SetMode(800, 600); break;
+		case 'D':
+			VID_SetMode(1024, 768); break;
+		case 'Q':
+			Sys_Shutdown(); break;
+		}
 		break;
 
 	default:
@@ -33,16 +47,13 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	return Result;
 }
 
-void VID_Init(void) {
-	WNDCLASS wc = { 0 };
-	wc.lpfnWndProc = MainWndProc;
-	wc.hInstance = GlobalInstance;
-	wc.hCursor = LoadCursor(NULL, IDC_ARROW);
-	wc.lpszClassName = "Module 3";
-
-	if (!RegisterClass(&wc)) {
-		exit(1);
+void VID_SetMode(int Width, int Height) {
+	if (BackBuffer) {
+		VID_Shutdown();
 	}
+
+	WindowWidth = Width;
+	WindowHeight = Height;
 
 	RECT r;
 	r.top = r.left = 0;
@@ -71,19 +82,19 @@ void VID_Init(void) {
 	AdjustWindowRectEx(&r, dwExStyle, 0, dwStyle);
 
 	MainWindow = CreateWindowEx(
-		dwExStyle, 
-		"Module 3", 
-		"Lesson 3.5", 
-		dwStyle, 
-		CW_USEDEFAULT, 
-		CW_USEDEFAULT, 
-		r.right - r.left, 
-		r.bottom - r.top, 
-		NULL, 
-		NULL, 
-		GlobalInstance, 
+		dwExStyle,
+		"Module 3",
+		"Lesson 3.5",
+		dwStyle,
+		CW_USEDEFAULT,
+		CW_USEDEFAULT,
+		r.right - r.left,
+		r.bottom - r.top,
+		NULL,
+		NULL,
+		GlobalInstance,
 		0
-	);
+		);
 
 	if (Fullscreen) {
 		SetWindowLong(MainWindow, GWL_STYLE, 0);
@@ -104,12 +115,31 @@ void VID_Init(void) {
 	BackBuffer = malloc(BufferWidth * BufferHeight * BytesPerPixel);
 }
 
+void VID_Init(void) {
+	wc.lpfnWndProc = MainWndProc;
+	wc.hInstance = GlobalInstance;
+	wc.hCursor = LoadCursor(NULL, IDC_ARROW);
+	wc.lpszClassName = "Module 3";
+
+	if (!RegisterClass(&wc)) {
+		exit(1);
+	}
+	VID_SetMode(WindowWidth, WindowHeight);	
+}
+
 void VID_Update(void) {
 	HDC dc = GetDC(MainWindow);
-	StretchDIBits(dc, 0, 0, WindowWidth, WindowHeight, 0, 0, BufferWidth, BufferHeight, BackBuffer, (BITMAPINFO*)&BitMapInfo, DIB_RGB_COLORS, SRCCOPY);
+	StretchDIBits(dc, 
+		0, 0, WindowWidth, WindowHeight, 
+		0, 0, BufferWidth, BufferHeight, 
+		BackBuffer, 
+		&BitMapInfo, 
+		DIB_RGB_COLORS, SRCCOPY);
 	ReleaseDC(MainWindow, dc);
 }
 
 void VID_Shutdown(void) {
-
+	DestroyWindow(MainWindow);
+	free(BackBuffer);
+	BackBuffer = NULL;
 }

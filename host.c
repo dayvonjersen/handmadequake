@@ -1,8 +1,5 @@
 #include "quakedef.h"
 
-#include <stdlib.h>
-#include <time.h>
-
 double realtime = 0.0;
 double oldrealtime = 0.0;
 double host_frametime = 0.0;
@@ -29,20 +26,7 @@ void Host_Frame(float timestep) {
 	}
 
 	Sys_SendKeyEvents();
-
-	srand(time(NULL));
-
-	uint32 *MemoryWalker = (uint32 *)BackBuffer;
-	for (int y = 0; y < 480; y++) {
-		for (int x = 0; x < 640; x++) {
-			uint8 r = rand() % 256;
-			uint8 g = rand() % 256;
-			uint8 b = rand() % 256;
-
-			*MemoryWalker++ = (r << 16) | (g << 8) | b;
-		}
-	}
-
+	
 	VID_Update();
 	//DrawRect32(10, 10, 300, 150, 0, 0, 0xff, BackBuffer);
 	//DrawPic32(10, 10, discWidth, discHeight, discData, BackBuffer);
