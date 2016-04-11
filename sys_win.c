@@ -52,6 +52,7 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam , LPARAM lParam
 	case WM_CREATE:
 		break;
 
+	case WM_KEYUP:
 	case WM_DESTROY:
 		Sys_Shutdown();
 		break;
@@ -85,9 +86,31 @@ int32 CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmd
 	DWORD dwExStyle = 0;
 	DWORD dwStyle = WS_OVERLAPPEDWINDOW | WS_VISIBLE;
 
+	BOOL Fullscreen = TRUE;
+	if (Fullscreen) {
+		DEVMODE dmScreenSettings = { 0 };
+		dmScreenSettings.dmSize = sizeof(dmScreenSettings);
+		dmScreenSettings.dmPelsWidth = BufferWidth;
+		dmScreenSettings.dmPelsHeight = BufferHeight;
+		dmScreenSettings.dmBitsPerPel = 32;
+		dmScreenSettings.dmFields = DM_BITSPERPEL | DM_PELSWIDTH | DM_PELSHEIGHT;
+		if (ChangeDisplaySettings(&dmScreenSettings, CDS_FULLSCREEN) != DISP_CHANGE_SUCCESSFUL) {
+			dwExStyle = WS_EX_APPWINDOW;
+			dwStyle = WS_POPUP;
+		}
+		else {
+			Fullscreen = FALSE;
+		}
+	}
+
 	AdjustWindowRectEx(&r, dwExStyle, 0, dwStyle);
 
 	HWND mainwindow = CreateWindowEx(dwExStyle, "Module 3", "Lesson 3.2", dwStyle, CW_USEDEFAULT, CW_USEDEFAULT, r.right - r.left, r.bottom - r.top, NULL, NULL, hInstance, 0);
+
+	if (Fullscreen) {
+		SetWindowLong(mainwindow, GWL_STYLE, 0);
+	}
+
 	ShowWindow(mainwindow, SW_SHOWDEFAULT);
 	
 	BitMapInfo.bmiHeader.biSize = sizeof(BitMapInfo.bmiHeader);
