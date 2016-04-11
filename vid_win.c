@@ -15,6 +15,20 @@ BITMAPINFO BitMapInfo = { 0 };
 WNDCLASS wc = { 0 };
 HWND MainWindow;
 
+typedef enum {
+	MS_WINDOWED,
+	MS_FULLSCREEN
+} modestate_t;
+
+typedef struct {
+	modestate_t type;
+	int width;
+	int height;
+} vmode_t;
+
+vmode_t modelist[30];
+int modenums = 0;
+
 LRESULT CALLBACK MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 	LRESULT Result = 0;
 	switch (uMsg) {
@@ -24,18 +38,20 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	case WM_CREATE:
 		break;
 
-	case WM_DESTROY:
+	case WM_CLOSE:
+		Sys_Shutdown();
 		break;
 
 	case WM_KEYDOWN:
 		switch (wParam) {
-		case 'W': break;
+		case 'W': 
+			VID_SetMode(3); break;
 		case 'A':
-			VID_SetMode(640, 480); break;
+			VID_SetMode(0); break;
 		case 'S':
-			VID_SetMode(800, 600); break;
+			VID_SetMode(1); break;
 		case 'D':
-			VID_SetMode(1024, 768); break;
+			VID_SetMode(2); break;
 		case 'Q':
 			Sys_Shutdown(); break;
 		}
@@ -47,13 +63,36 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	return Result;
 }
 
-void VID_SetMode(int Width, int Height) {
+void VID_InitWindowedMode(void) {
+	modelist[modenums].type = MS_WINDOWED;
+	modelist[modenums].width = 320;
+	modelist[modenums].height = 240;
+	modenums++;
+	modelist[modenums].type = MS_WINDOWED;
+	modelist[modenums].width = 640;
+	modelist[modenums].height = 480;
+	modenums++;
+	modelist[modenums].type = MS_WINDOWED;
+	modelist[modenums].width = 800;
+	modelist[modenums].height = 600;
+	modenums++;
+	modelist[modenums].type = MS_WINDOWED;
+	modelist[modenums].width = 1024;
+	modelist[modenums].height = 768;
+	modenums++;
+}
+
+void VID_InitFullscreenMode(void) {
+
+}
+
+void VID_SetMode(int ModeValue) {
 	if (BackBuffer) {
 		VID_Shutdown();
 	}
 
-	WindowWidth = Width;
-	WindowHeight = Height;
+	WindowWidth = modelist[ModeValue].width;
+	WindowHeight = modelist[ModeValue].height;
 
 	RECT r;
 	r.top = r.left = 0;
@@ -63,7 +102,7 @@ void VID_SetMode(int Width, int Height) {
 	DWORD dwExStyle = 0;
 	DWORD dwStyle = WS_OVERLAPPEDWINDOW | WS_VISIBLE;
 
-	if (Fullscreen) {
+	if (modelist[ModeValue].type == MS_FULLSCREEN) {
 		DEVMODE dmScreenSettings = { 0 };
 		dmScreenSettings.dmSize = sizeof(dmScreenSettings);
 		dmScreenSettings.dmPelsWidth = BufferWidth;
@@ -124,7 +163,11 @@ void VID_Init(void) {
 	if (!RegisterClass(&wc)) {
 		exit(1);
 	}
-	VID_SetMode(WindowWidth, WindowHeight);	
+
+	VID_InitWindowedMode();
+	VID_InitFullscreenMode();
+
+	VID_SetMode(0);	
 }
 
 void VID_Update(void) {
