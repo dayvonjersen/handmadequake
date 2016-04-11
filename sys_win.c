@@ -94,10 +94,13 @@ void DrawPic32(int x, int y, int w, int h, uint8 *src, uint8 *dest) {
 	int *bufferWalker = (int*)dest;
 	for (int height = 0; height < h; height++) {
 		for (int width = 0; width < w; width++) {
-			RGBQUAD tempColor = BitMapInfo.acolors[*src];
-			uint32 myColor  = (tempColor.rgbRed << 16) | (tempColor.rgbGreen << 8) | tempColor.rgbBlue;
-			*bufferWalker++ = myColor;
-			src++;
+
+			//RGBQUAD tempColor = BitMapInfo.acolors[*src];
+			//uint32 myColor  = (tempColor.rgbRed << 16) | (tempColor.rgbGreen << 8) | tempColor.rgbBlue;
+			//*bufferWalker++ = myColor;
+			//src++;
+
+			*bufferWalker++ = *(int*)&BitMapInfo.acolors[*src++];
 		}
 		dest += BufferWidth * BytesPerPixel;
 		bufferWalker = (int *)dest;
