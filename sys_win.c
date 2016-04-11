@@ -4,6 +4,11 @@
 
 BOOL IsRunning = TRUE;
 
+int BufferWidth = 640;
+int BufferHeight = 480;
+void *BackBuffer;
+BITMAPINFO BitMapInfo = { 0 };
+
 static double GTimePassed = 0.0;
 static double SecondsPerTick = 0.0;
 static __int64 GTimeCount = 0;
@@ -66,7 +71,7 @@ int32 CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmd
 	wc.lpfnWndProc = MainWndProc;
 	wc.hInstance = hInstance;
 	wc.hCursor = LoadCursor(NULL, IDC_ARROW);
-	wc.lpszClassName = "Module 2";
+	wc.lpszClassName = "Module 3";
 
 	if (!RegisterClass(&wc)) {
 		exit(1);
@@ -74,19 +79,29 @@ int32 CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmd
 
 	RECT r;
 	r.top = r.left = 0;
-	r.right = 800;
-	r.bottom = 600;
+	r.right = BufferWidth;
+	r.bottom = BufferHeight;
 
-	DWORD WindowStyle = WS_OVERLAPPEDWINDOW | WS_VISIBLE;
+	DWORD dwExStyle = 0;
+	DWORD dwStyle = WS_OVERLAPPEDWINDOW | WS_VISIBLE;
 
-	AdjustWindowRect(&r, WindowStyle, FALSE);
+	AdjustWindowRectEx(&r, dwExStyle, 0, dwStyle);
 
-	HWND mainwindow = CreateWindowEx(0, "Module 2", "Lesson 2.6", WindowStyle, CW_USEDEFAULT, CW_USEDEFAULT, r.right - r.left, r.bottom - r.top, NULL, NULL, hInstance, 0);
+	HWND mainwindow = CreateWindowEx(dwExStyle, "Module 3", "Lesson 3.2", dwStyle, CW_USEDEFAULT, CW_USEDEFAULT, r.right - r.left, r.bottom - r.top, NULL, NULL, hInstance, 0);
 	ShowWindow(mainwindow, SW_SHOWDEFAULT);
 	
-	HDC DeviceContext = GetDC(mainwindow);
-	PatBlt(DeviceContext, 0, 0, 800, 600, BLACKNESS);
-	ReleaseDC(mainwindow, DeviceContext);
+	BitMapInfo.bmiHeader.biSize = sizeof(BitMapInfo.bmiHeader);
+	BitMapInfo.bmiHeader.biWidth = BufferWidth;
+	BitMapInfo.bmiHeader.biHeight = BufferHeight;
+	BitMapInfo.bmiHeader.biPlanes = 1;
+	BitMapInfo.bmiHeader.biBitCount = 32;
+	BitMapInfo.bmiHeader.biCompression = BI_RGB;
+
+	BackBuffer = malloc(BufferWidth * BufferHeight * 4);
+
+	//HDC DeviceContext = GetDC(mainwindow);
+	//PatBlt(DeviceContext, 0, 0, BufferWidth, BufferHeight, BLACKNESS);
+	//ReleaseDC(mainwindow, DeviceContext);
 	
 	float oldtime = Sys_InitFloatTime();
 	
@@ -100,6 +115,21 @@ int32 CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmd
 		float newtime = Sys_FloatTime();
 		Host_Frame(newtime - oldtime);
 		oldtime = newtime;
+
+		int *MemoryWalker = (int *)BackBuffer;
+		for (int y = 0; y < BufferHeight; y++) {
+			for (int x = 0; x < BufferWidth; x++) {
+				char r = rand() % 256;
+				char g = rand() % 256;
+				char b = rand() % 256;
+
+				*MemoryWalker++ = (r << 16) | (g << 8) | b;
+			}
+		}
+
+		HDC dc = GetDC(mainwindow);
+		StretchDIBits(dc, 0, 0, BufferWidth, BufferHeight, 0, 0, BufferWidth, BufferHeight, BackBuffer, &BitMapInfo, DIB_RGB_COLORS, SRCCOPY);
+		ReleaseDC(mainwindow, dc);
 	}
 
 	Host_Shutdown();
