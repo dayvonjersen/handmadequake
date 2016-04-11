@@ -7,8 +7,10 @@
 
 BOOL IsRunning = TRUE;
 
-int BufferWidth = 640;
-int BufferHeight = 480;
+int WindowWidth = 640;
+int WindowHeight = 480;
+int BufferWidth = 320;
+int BufferHeight = 240;
 int BytesPerPixel = 1;
 void *BackBuffer;
 
@@ -124,8 +126,8 @@ int32 CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmd
 
 	RECT r;
 	r.top = r.left = 0;
-	r.right = BufferWidth;
-	r.bottom = BufferHeight;
+	r.right = WindowWidth;
+	r.bottom = WindowHeight;
 
 	DWORD dwExStyle = 0;
 	DWORD dwStyle = WS_OVERLAPPEDWINDOW | WS_VISIBLE;
@@ -175,7 +177,7 @@ int32 CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmd
 		BitMapInfo.acolors[i].rgbGreen = *paletteData++;
 		BitMapInfo.acolors[i].rgbBlue = *paletteData++;
 	}
-
+	
 	//HDC DeviceContext = GetDC(mainwindow);
 	//PatBlt(DeviceContext, 0, 0, BufferWidth, BufferHeight, BLACKNESS);
 	//ReleaseDC(mainwindow, DeviceContext);
@@ -219,11 +221,11 @@ int32 CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmd
 		}
 
 		//DrawRect(10, 10, 300, 150, 1, BackBuffer);
-		DrawPic(100, 100, discWidth, discHeight, discData, BackBuffer);
-		DrawPic(100, 200, pauseWidth, pauseHeight, pauseData, BackBuffer);
+		DrawPic(10, 10, discWidth, discHeight, discData, BackBuffer);
+		DrawPic(100, 100, pauseWidth, pauseHeight, pauseData, BackBuffer);
 
 		HDC dc = GetDC(mainwindow);
-		StretchDIBits(dc, 0, 0, BufferWidth, BufferHeight, 0, 0, BufferWidth, BufferHeight, BackBuffer, (BITMAPINFO*)&BitMapInfo, DIB_RGB_COLORS, SRCCOPY);
+		StretchDIBits(dc, 0, 0, WindowWidth, WindowHeight, 0, 0, BufferWidth, BufferHeight, BackBuffer, (BITMAPINFO*)&BitMapInfo, DIB_RGB_COLORS, SRCCOPY);
 		ReleaseDC(mainwindow, dc);
 	}
 
