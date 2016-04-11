@@ -9,9 +9,9 @@ BOOL IsRunning = TRUE;
 
 int WindowWidth = 640;
 int WindowHeight = 480;
-int BufferWidth = 320;
-int BufferHeight = 240;
-int BytesPerPixel = 1;
+int BufferWidth = 640;
+int BufferHeight = 480;
+int BytesPerPixel = 4;
 void *BackBuffer;
 
 typedef struct dibinfo_s {
@@ -77,7 +77,7 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam , LPARAM lParam
 	return Result;
 }
 
-void DrawPic(int x, int y, int w, int h, uint8 *src, uint8 *dest) {
+void DrawPic8(int x, int y, int w, int h, uint8 *src, uint8 *dest) {
 	dest += (BufferWidth * BytesPerPixel * y) + (x * BytesPerPixel);
 	uint8 *bufferWalker = dest;
 	for (int height = 0; height < h; height++) {
@@ -89,7 +89,7 @@ void DrawPic(int x, int y, int w, int h, uint8 *src, uint8 *dest) {
 	}
 }
 
-void DrawRect(int x, int y, int w, int h, uint8 color, uint8* buffer) {
+void DrawRect8(int x, int y, int w, int h, uint8 color, uint8* buffer) {
 	if (x < 0) x = 0;
 	if (y < 0) y = 0;
 	if (x + w > BufferWidth)  w = BufferWidth - x;
@@ -106,6 +106,26 @@ void DrawRect(int x, int y, int w, int h, uint8 color, uint8* buffer) {
 		}
 		buffer += BufferWidth * BytesPerPixel;
 		bufferWalker = (uint8 *)buffer;
+	}
+}
+
+void DrawRect32(int x, int y, int w, int h, int r, int g, int b, uint8* buffer) {
+	if (x < 0) x = 0;
+	if (y < 0) y = 0;
+	if (x + w > BufferWidth)  w = BufferWidth - x;
+	if (y + h > BufferHeight) h = BufferHeight - y;
+
+	buffer += (BufferWidth * BytesPerPixel * y) + (x * BytesPerPixel);
+	int *bufferWalker = (int *)buffer;
+
+	uint32 color = (r << 16) | (g << 8) | b;
+
+	for (int height = 0; height < h; height++) {
+		for (int width = 0; width < w; width++) {
+			*bufferWalker++ = color;
+		}
+		buffer += BufferWidth * BytesPerPixel;
+		bufferWalker = (int *)buffer;
 	}
 }
 
@@ -199,8 +219,7 @@ int32 CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmd
 	retval = fread(&pauseHeight, 4, 1, pause);
 	void *pauseData = malloc(pauseWidth*pauseHeight);
 	retval = fread(pauseData, 1, pauseWidth*pauseHeight, pause);
-	fclose(pause);
-	
+	fclose(pause);	
 
 	MSG msg;
 	while (IsRunning) {
@@ -213,16 +232,35 @@ int32 CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmd
 		Host_Frame(newtime - oldtime);
 		oldtime = newtime;
 
-		uint8 *MemoryWalker = (uint8 *)BackBuffer;
-		for (int y = 0; y < BufferHeight; y++) {
-			for (int x = 0; x < BufferWidth; x++) {
-				*MemoryWalker++ = rand() % 256;
+		switch (BytesPerPixel) {
+			// 8-bit mode
+		case 1: {
+			uint8 *MemoryWalker = (uint8 *)BackBuffer;
+			for (int y = 0; y < BufferHeight; y++) {
+				for (int x = 0; x < BufferWidth; x++) {
+					*MemoryWalker++ = rand() % 256;
+				}
 			}
+			//DrawRect8(10, 10, 300, 150, 1, BackBuffer);
+			DrawPic8(10, 10, discWidth, discHeight, discData, BackBuffer);
+			DrawPic8(100, 100, pauseWidth, pauseHeight, pauseData, BackBuffer);
+		}; break;
+			// 32-bit mode
+		case 4: {
+			uint32 *MemoryWalker = (uint32 *)BackBuffer;
+			for (int y = 0; y < BufferHeight; y++) {
+				for (int x = 0; x < BufferWidth; x++) {
+					uint8 r = rand() % 256;
+					uint8 g = rand() % 256;
+					uint8 b = rand() % 256;
+
+					*MemoryWalker++ = (r << 16) | (g << 8) | b;
+				}
+			}
+			DrawRect32(10, 10, 300, 150, 0, 0, 0xff, BackBuffer);
+		}; break;
 		}
 
-		//DrawRect(10, 10, 300, 150, 1, BackBuffer);
-		DrawPic(10, 10, discWidth, discHeight, discData, BackBuffer);
-		DrawPic(100, 100, pauseWidth, pauseHeight, pauseData, BackBuffer);
 
 		HDC dc = GetDC(mainwindow);
 		StretchDIBits(dc, 0, 0, WindowWidth, WindowHeight, 0, 0, BufferWidth, BufferHeight, BackBuffer, (BITMAPINFO*)&BitMapInfo, DIB_RGB_COLORS, SRCCOPY);
