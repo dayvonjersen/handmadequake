@@ -6,10 +6,15 @@ BOOL IsRunning = TRUE;
 
 int BufferWidth = 640;
 int BufferHeight = 480;
-int BytesPerPixel = 4;
+int BytesPerPixel = 1;
 void *BackBuffer;
 
-BITMAPINFO BitMapInfo = { 0 };
+typedef struct dibinfo_s {
+	BITMAPINFOHEADER bmiHeader;
+	RGBQUAD			 acolors[256];
+} dibinfo_t;
+
+dibinfo_t BitMapInfo = { 0 };
 
 BOOL Fullscreen = FALSE;
 
@@ -67,16 +72,16 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam , LPARAM lParam
 	return Result;
 }
 
-void DrawRect(int x, int y, int w, int h, uint8 r, uint8 g, uint8 b, uint8* buffer) {
+void DrawRect(int x, int y, int w, int h, uint8 color, uint8* buffer) {
 	if (x < 0) x = 0;
 	if (y < 0) y = 0;
 	if (x + w > BufferWidth)  w = BufferWidth - x;
 	if (y + h > BufferHeight) h = BufferHeight - y;
 
 	buffer += (BufferWidth * BytesPerPixel * y) + (x * BytesPerPixel);
-	int *bufferWalker = (int *)buffer;
+	uint8 *bufferWalker = buffer;
 
-	uint32 color = (r << 16) | (g << 8) | b;
+	//uint32 color = (r << 16) | (g << 8) | b;
 
 	for (int height = 0; height < h; height++) {
 		for (int width = 0; width < w; width++) {
@@ -140,10 +145,20 @@ int32 CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmd
 	BitMapInfo.bmiHeader.biWidth = BufferWidth;
 	BitMapInfo.bmiHeader.biHeight = -BufferHeight;
 	BitMapInfo.bmiHeader.biPlanes = 1;
-	BitMapInfo.bmiHeader.biBitCount = 32;
+	BitMapInfo.bmiHeader.biBitCount = 8 * BytesPerPixel;
 	BitMapInfo.bmiHeader.biCompression = BI_RGB;
 
-	BackBuffer = malloc(BufferWidth * BufferHeight * 4);
+	BackBuffer = malloc(BufferWidth * BufferHeight * BytesPerPixel);
+
+	BitMapInfo.acolors[0].rgbRed  = 0;
+	BitMapInfo.acolors[0].rgbGreen = 0;
+	BitMapInfo.acolors[0].rgbBlue  = 0;
+
+	for (int i = 1; i < 256; i++) {
+		BitMapInfo.acolors[i].rgbRed   = rand() % 256;
+		BitMapInfo.acolors[i].rgbGreen = rand() % 256;
+		BitMapInfo.acolors[i].rgbBlue  = rand() % 256;
+	}
 
 	//HDC DeviceContext = GetDC(mainwindow);
 	//PatBlt(DeviceContext, 0, 0, BufferWidth, BufferHeight, BLACKNESS);
@@ -162,21 +177,17 @@ int32 CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmd
 		Host_Frame(newtime - oldtime);
 		oldtime = newtime;
 
-		int *MemoryWalker = (int *)BackBuffer;
+		uint8 *MemoryWalker = (uint8 *)BackBuffer;
 		for (int y = 0; y < BufferHeight; y++) {
 			for (int x = 0; x < BufferWidth; x++) {
-				uint8 r = rand() % 256;
-				uint8 g = rand() % 256;
-				uint8 b = rand() % 256;
-
-				*MemoryWalker++ = (r << 16) | (g << 8) | b;
+				*MemoryWalker++ = rand() % 256;
 			}
 		}
 
-		DrawRect(10, 10, 400, 200, 255, 0, 0, BackBuffer);
+		DrawRect(10, 10, 300, 150, 1, BackBuffer);
 
 		HDC dc = GetDC(mainwindow);
-		StretchDIBits(dc, 0, 0, BufferWidth, BufferHeight, 0, 0, BufferWidth, BufferHeight, BackBuffer, &BitMapInfo, DIB_RGB_COLORS, SRCCOPY);
+		StretchDIBits(dc, 0, 0, BufferWidth, BufferHeight, 0, 0, BufferWidth, BufferHeight, BackBuffer, (BITMAPINFO*)&BitMapInfo, DIB_RGB_COLORS, SRCCOPY);
 		ReleaseDC(mainwindow, dc);
 	}
 
