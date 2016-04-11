@@ -206,7 +206,7 @@ int32 CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmd
 	BackBuffer = malloc(BufferWidth * BufferHeight * BytesPerPixel);
 
 	uint8 *paletteData = malloc(768);
-	FILE *palette = fopen("PALETTE.LMP", "r");
+	FILE *palette = fopen("PALETTE.LMP", "rb");
 	size_t ret = fread(paletteData, 1, 768, palette);
 	fclose(palette);
 
@@ -224,7 +224,7 @@ int32 CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmd
 	
 	int discWidth, discHeight;
 	size_t retval;
-	FILE *disc = fopen("DISC.lmp", "r");
+	FILE *disc = fopen("DISC.lmp", "rb");
 	retval = fread(&discWidth, 4, 1, disc);
 	retval = fread(&discHeight, 4, 1, disc);
 	void *discData = malloc(discWidth*discHeight);
@@ -232,7 +232,7 @@ int32 CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmd
 	fclose(disc);
 
 	int pauseWidth, pauseHeight;
-	FILE *pause = fopen("PAUSE.lmp", "r");
+	FILE *pause = fopen("PAUSE.lmp", "rb");
 	retval = fread(&pauseWidth, 4, 1, pause);
 	retval = fread(&pauseHeight, 4, 1, pause);
 	void *pauseData = malloc(pauseWidth*pauseHeight);
