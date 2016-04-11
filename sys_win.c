@@ -6,8 +6,12 @@ BOOL IsRunning = TRUE;
 
 int BufferWidth = 640;
 int BufferHeight = 480;
+int BytesPerPixel = 4;
 void *BackBuffer;
+
 BITMAPINFO BitMapInfo = { 0 };
+
+BOOL Fullscreen = FALSE;
 
 static double GTimePassed = 0.0;
 static double SecondsPerTick = 0.0;
@@ -63,6 +67,26 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam , LPARAM lParam
 	return Result;
 }
 
+void DrawRect(int x, int y, int w, int h, uint8 r, uint8 g, uint8 b, uint8* buffer) {
+	if (x < 0) x = 0;
+	if (y < 0) y = 0;
+	if (x + w > BufferWidth)  w = BufferWidth - x;
+	if (y + h > BufferHeight) h = BufferHeight - y;
+
+	buffer += (BufferWidth * BytesPerPixel * y) + (x * BytesPerPixel);
+	int *bufferWalker = (int *)buffer;
+
+	uint32 color = (r << 16) | (g << 8) | b;
+
+	for (int height = 0; height < h; height++) {
+		for (int width = 0; width < w; width++) {
+			*bufferWalker++ = color;
+		}
+		buffer += BufferWidth * BytesPerPixel;
+		bufferWalker = (int *)buffer;
+	}
+}
+
 int32 CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int32 nCmdShow) {
 	COM_ParseCmdLine(lpCmdLine);
 	//int32 test = COM_CheckParm("-setalpha");
@@ -86,7 +110,6 @@ int32 CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmd
 	DWORD dwExStyle = 0;
 	DWORD dwStyle = WS_OVERLAPPEDWINDOW | WS_VISIBLE;
 
-	BOOL Fullscreen = TRUE;
 	if (Fullscreen) {
 		DEVMODE dmScreenSettings = { 0 };
 		dmScreenSettings.dmSize = sizeof(dmScreenSettings);
@@ -149,6 +172,8 @@ int32 CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmd
 				*MemoryWalker++ = (r << 16) | (g << 8) | b;
 			}
 		}
+
+		DrawRect(10, 10, 400, 200, 255, 0, 0, BackBuffer);
 
 		HDC dc = GetDC(mainwindow);
 		StretchDIBits(dc, 0, 0, BufferWidth, BufferHeight, 0, 0, BufferWidth, BufferHeight, BackBuffer, &BitMapInfo, DIB_RGB_COLORS, SRCCOPY);
