@@ -22,12 +22,13 @@ typedef enum {
 
 typedef struct {
 	modestate_t type;
-	int width;
-	int height;
+	int32 width;
+	int32 height;
+	uint32 Hz;
 } vmode_t;
 
-vmode_t modelist[30];
-int modenums = 0;
+vmode_t ModeList[40];
+int ModeCount = 0;
 
 LRESULT CALLBACK MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 	LRESULT Result = 0;
@@ -64,26 +65,51 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 }
 
 void VID_InitWindowedMode(void) {
-	modelist[modenums].type = MS_WINDOWED;
-	modelist[modenums].width = 320;
-	modelist[modenums].height = 240;
-	modenums++;
-	modelist[modenums].type = MS_WINDOWED;
-	modelist[modenums].width = 640;
-	modelist[modenums].height = 480;
-	modenums++;
-	modelist[modenums].type = MS_WINDOWED;
-	modelist[modenums].width = 800;
-	modelist[modenums].height = 600;
-	modenums++;
-	modelist[modenums].type = MS_WINDOWED;
-	modelist[modenums].width = 1024;
-	modelist[modenums].height = 768;
-	modenums++;
+	ModeList[ModeCount].type = MS_WINDOWED;
+	ModeList[ModeCount].width = 320;
+	ModeList[ModeCount].height = 240;
+	ModeList[ModeCount].Hz = 0;
+	ModeCount++;
+	ModeList[ModeCount].type = MS_WINDOWED;
+	ModeList[ModeCount].width = 640;
+	ModeList[ModeCount].height = 480;
+	ModeList[ModeCount].Hz = 0;
+	ModeCount++;
+	ModeList[ModeCount].type = MS_WINDOWED;
+	ModeList[ModeCount].width = 800;
+	ModeList[ModeCount].height = 600;
+	ModeList[ModeCount].Hz = 0;
+	ModeCount++;
+	ModeList[ModeCount].type = MS_WINDOWED;
+	ModeList[ModeCount].width = 1024;
+	ModeList[ModeCount].height = 768;
+	ModeList[ModeCount].Hz = 0;
+	ModeCount++;
 }
 
 void VID_InitFullscreenMode(void) {
+	DEVMODE DevMode;
+	BOOL Success;
+	int ModeNum = 0;
+	int OldWidth = 0, OldHeight = 0;
 
+	do {
+		Success = EnumDisplaySettings(NULL, ModeNum++, &DevMode);
+		if (DevMode.dmPelsHeight == OldHeight && DevMode.dmPelsWidth == OldWidth) {
+			if (DevMode.dmDisplayFrequency > ModeList[ModeCount - 1].Hz) {
+				ModeList[ModeCount - 1].Hz = DevMode.dmDisplayFrequency;
+			}
+		}
+		else {
+			ModeList[ModeCount].type = MS_FULLSCREEN;
+			ModeList[ModeCount].width = DevMode.dmPelsWidth;
+			ModeList[ModeCount].height = DevMode.dmPelsHeight;
+			ModeList[ModeCount].Hz = DevMode.dmDisplayFrequency;
+			ModeCount++;
+			OldWidth = DevMode.dmPelsWidth;
+			OldHeight = DevMode.dmPelsHeight;
+		}
+	} while (Success);
 }
 
 void VID_SetMode(int ModeValue) {
@@ -91,8 +117,8 @@ void VID_SetMode(int ModeValue) {
 		VID_Shutdown();
 	}
 
-	WindowWidth = modelist[ModeValue].width;
-	WindowHeight = modelist[ModeValue].height;
+	WindowWidth = ModeList[ModeValue].width;
+	WindowHeight = ModeList[ModeValue].height;
 
 	RECT r;
 	r.top = r.left = 0;
@@ -102,7 +128,7 @@ void VID_SetMode(int ModeValue) {
 	DWORD dwExStyle = 0;
 	DWORD dwStyle = WS_OVERLAPPEDWINDOW | WS_VISIBLE;
 
-	if (modelist[ModeValue].type == MS_FULLSCREEN) {
+	if (ModeList[ModeValue].type == MS_FULLSCREEN) {
 		DEVMODE dmScreenSettings = { 0 };
 		dmScreenSettings.dmSize = sizeof(dmScreenSettings);
 		dmScreenSettings.dmPelsWidth = BufferWidth;
