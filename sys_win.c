@@ -142,9 +142,9 @@ int32 CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmd
 		int *MemoryWalker = (int *)BackBuffer;
 		for (int y = 0; y < BufferHeight; y++) {
 			for (int x = 0; x < BufferWidth; x++) {
-				char r = rand() % 256;
-				char g = rand() % 256;
-				char b = rand() % 256;
+				uint8 r = rand() % 256;
+				uint8 g = rand() % 256;
+				uint8 b = rand() % 256;
 
 				*MemoryWalker++ = (r << 16) | (g << 8) | b;
 			}
