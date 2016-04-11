@@ -1,6 +1,9 @@
+#define _CRT_SECURE_NO_WARNINGS 1
 
 #include "winquake.h"
 #include "quakedef.h"
+
+#include <stdio.h>
 
 BOOL IsRunning = TRUE;
 
@@ -72,6 +75,18 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam , LPARAM lParam
 	return Result;
 }
 
+void DrawPic(int x, int y, int w, int h, uint8 *src, uint8 *dest) {
+	dest += (BufferWidth * BytesPerPixel * y) + (x * BytesPerPixel);
+	uint8 *bufferWalker = dest;
+	for (int height = 0; height < h; height++) {
+		for (int width = 0; width < w; width++) {
+			*bufferWalker++ = *src++;
+		}
+		dest += BufferWidth * BytesPerPixel;
+		bufferWalker = dest;
+	}
+}
+
 void DrawRect(int x, int y, int w, int h, uint8 color, uint8* buffer) {
 	if (x < 0) x = 0;
 	if (y < 0) y = 0;
@@ -88,7 +103,7 @@ void DrawRect(int x, int y, int w, int h, uint8 color, uint8* buffer) {
 			*bufferWalker++ = color;
 		}
 		buffer += BufferWidth * BytesPerPixel;
-		bufferWalker = (int *)buffer;
+		bufferWalker = (uint8 *)buffer;
 	}
 }
 
@@ -133,7 +148,7 @@ int32 CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmd
 
 	AdjustWindowRectEx(&r, dwExStyle, 0, dwStyle);
 
-	HWND mainwindow = CreateWindowEx(dwExStyle, "Module 3", "Lesson 3.3", dwStyle, CW_USEDEFAULT, CW_USEDEFAULT, r.right - r.left, r.bottom - r.top, NULL, NULL, hInstance, 0);
+	HWND mainwindow = CreateWindowEx(dwExStyle, "Module 3", "Lesson 3.4", dwStyle, CW_USEDEFAULT, CW_USEDEFAULT, r.right - r.left, r.bottom - r.top, NULL, NULL, hInstance, 0);
 
 	if (Fullscreen) {
 		SetWindowLong(mainwindow, GWL_STYLE, 0);
@@ -150,14 +165,15 @@ int32 CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmd
 
 	BackBuffer = malloc(BufferWidth * BufferHeight * BytesPerPixel);
 
-	BitMapInfo.acolors[0].rgbRed  = 0;
-	BitMapInfo.acolors[0].rgbGreen = 0;
-	BitMapInfo.acolors[0].rgbBlue  = 0;
+	uint8 *paletteData = malloc(768);
+	FILE *palette = fopen("PALETTE.LMP", "r");
+	size_t ret = fread(paletteData, 1, 768, palette);
+	fclose(palette);
 
-	for (int i = 1; i < 256; i++) {
-		BitMapInfo.acolors[i].rgbRed   = rand() % 256;
-		BitMapInfo.acolors[i].rgbGreen = rand() % 256;
-		BitMapInfo.acolors[i].rgbBlue  = rand() % 256;
+	for (int i = 0; i < 256; i++) {
+		BitMapInfo.acolors[i].rgbRed = *paletteData++;
+		BitMapInfo.acolors[i].rgbGreen = *paletteData++;
+		BitMapInfo.acolors[i].rgbBlue = *paletteData++;
 	}
 
 	//HDC DeviceContext = GetDC(mainwindow);
@@ -166,6 +182,24 @@ int32 CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmd
 	
 	float oldtime = Sys_InitFloatTime();
 	
+	int discWidth, discHeight;
+	size_t retval;
+	FILE *disc = fopen("DISC.lmp", "r");
+	retval = fread(&discWidth, 4, 1, disc);
+	retval = fread(&discHeight, 4, 1, disc);
+	void *discData = malloc(discWidth*discHeight);
+	retval = fread(discData, 1, discWidth*discHeight, disc);
+	fclose(disc);
+
+	int pauseWidth, pauseHeight;
+	FILE *pause = fopen("PAUSE.lmp", "r");
+	retval = fread(&pauseWidth, 4, 1, pause);
+	retval = fread(&pauseHeight, 4, 1, pause);
+	void *pauseData = malloc(pauseWidth*pauseHeight);
+	retval = fread(pauseData, 1, pauseWidth*pauseHeight, pause);
+	fclose(pause);
+	
+
 	MSG msg;
 	while (IsRunning) {
 		while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
@@ -184,7 +218,9 @@ int32 CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmd
 			}
 		}
 
-		DrawRect(10, 10, 300, 150, 1, BackBuffer);
+		//DrawRect(10, 10, 300, 150, 1, BackBuffer);
+		DrawPic(100, 100, discWidth, discHeight, discData, BackBuffer);
+		DrawPic(100, 200, pauseWidth, pauseHeight, pauseData, BackBuffer);
 
 		HDC dc = GetDC(mainwindow);
 		StretchDIBits(dc, 0, 0, BufferWidth, BufferHeight, 0, 0, BufferWidth, BufferHeight, BackBuffer, (BITMAPINFO*)&BitMapInfo, DIB_RGB_COLORS, SRCCOPY);
@@ -192,6 +228,10 @@ int32 CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmd
 	}
 
 	Host_Shutdown();
+
+	free(BackBuffer);
+	free(discData);
+	free(pauseData);
 
 	return 0;
 }

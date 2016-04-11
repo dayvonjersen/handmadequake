@@ -257,6 +257,7 @@ paket-files/
 
 # *cough*
 WinQuake/HandmadeQuake/HandmadeQuake/ID1/
+*.lmp
 
 # 3rd party tools
 Slade/
