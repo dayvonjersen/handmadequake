@@ -105,7 +105,7 @@ int32 CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmd
 
 	AdjustWindowRectEx(&r, dwExStyle, 0, dwStyle);
 
-	HWND mainwindow = CreateWindowEx(dwExStyle, "Module 3", "Lesson 3.2", dwStyle, CW_USEDEFAULT, CW_USEDEFAULT, r.right - r.left, r.bottom - r.top, NULL, NULL, hInstance, 0);
+	HWND mainwindow = CreateWindowEx(dwExStyle, "Module 3", "Lesson 3.3", dwStyle, CW_USEDEFAULT, CW_USEDEFAULT, r.right - r.left, r.bottom - r.top, NULL, NULL, hInstance, 0);
 
 	if (Fullscreen) {
 		SetWindowLong(mainwindow, GWL_STYLE, 0);
@@ -115,7 +115,7 @@ int32 CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmd
 	
 	BitMapInfo.bmiHeader.biSize = sizeof(BitMapInfo.bmiHeader);
 	BitMapInfo.bmiHeader.biWidth = BufferWidth;
-	BitMapInfo.bmiHeader.biHeight = BufferHeight;
+	BitMapInfo.bmiHeader.biHeight = -BufferHeight;
 	BitMapInfo.bmiHeader.biPlanes = 1;
 	BitMapInfo.bmiHeader.biBitCount = 32;
 	BitMapInfo.bmiHeader.biCompression = BI_RGB;
