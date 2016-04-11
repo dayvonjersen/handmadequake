@@ -28,7 +28,8 @@ typedef struct {
 } vmode_t;
 
 vmode_t ModeList[40];
-int ModeCount = 0;
+int32 ModeCount = 0;
+int32 FirstFullscreenMode = -1;
 
 LRESULT CALLBACK MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 	LRESULT Result = 0;
@@ -55,6 +56,10 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			VID_SetMode(2); break;
 		case 'Q':
 			Sys_Shutdown(); break;
+		case '1':
+			VID_SetMode(FirstFullscreenMode); break;
+		case '2':
+			VID_SetMode(FirstFullscreenMode + 1); break;
 		}
 		break;
 
@@ -93,9 +98,10 @@ void VID_InitFullscreenMode(void) {
 	int ModeNum = 0;
 	int OldWidth = 0, OldHeight = 0;
 
+	FirstFullscreenMode = ModeCount;
 	do {
 		Success = EnumDisplaySettings(NULL, ModeNum++, &DevMode);
-		if (DevMode.dmPelsHeight == OldHeight && DevMode.dmPelsWidth == OldWidth) {
+		if (ModeCount > FirstFullscreenMode && DevMode.dmPelsHeight == OldHeight && DevMode.dmPelsWidth == OldWidth) {
 			if (DevMode.dmDisplayFrequency > ModeList[ModeCount - 1].Hz) {
 				ModeList[ModeCount - 1].Hz = DevMode.dmDisplayFrequency;
 			}
@@ -129,19 +135,24 @@ void VID_SetMode(int ModeValue) {
 	DWORD dwStyle = WS_OVERLAPPEDWINDOW | WS_VISIBLE;
 
 	if (ModeList[ModeValue].type == MS_FULLSCREEN) {
+		Fullscreen = TRUE;
 		DEVMODE dmScreenSettings = { 0 };
 		dmScreenSettings.dmSize = sizeof(dmScreenSettings);
-		dmScreenSettings.dmPelsWidth = BufferWidth;
-		dmScreenSettings.dmPelsHeight = BufferHeight;
+		dmScreenSettings.dmPelsWidth = ModeList[ModeValue].width;
+		dmScreenSettings.dmPelsHeight = ModeList[ModeValue].height;
+		dmScreenSettings.dmDisplayFrequency = ModeList[ModeValue].Hz;
 		dmScreenSettings.dmBitsPerPel = 32;
 		dmScreenSettings.dmFields = DM_BITSPERPEL | DM_PELSWIDTH | DM_PELSHEIGHT;
-		if (ChangeDisplaySettings(&dmScreenSettings, CDS_FULLSCREEN) != DISP_CHANGE_SUCCESSFUL) {
+		if (ChangeDisplaySettings(&dmScreenSettings, CDS_FULLSCREEN) == DISP_CHANGE_SUCCESSFUL) {
 			dwExStyle = WS_EX_APPWINDOW;
 			dwStyle = WS_POPUP;
 		}
 		else {
 			Fullscreen = FALSE;
 		}
+	}
+	else if (Fullscreen == TRUE) {
+		ChangeDisplaySettings(NULL, 0);
 	}
 
 	AdjustWindowRectEx(&r, dwExStyle, 0, dwStyle);
@@ -208,6 +219,7 @@ void VID_Update(void) {
 }
 
 void VID_Shutdown(void) {
+	ChangeDisplaySettings(NULL, 0);
 	DestroyWindow(MainWindow);
 	free(BackBuffer);
 	BackBuffer = NULL;
