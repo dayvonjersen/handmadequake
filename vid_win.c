@@ -1,13 +1,17 @@
 #include "quakedef.h"
 #include "winquake.h"
 
-int WindowWidth = 640;
-int WindowHeight = 480;
-int BufferWidth = 640;
-int BufferHeight = 480;
-int BytesPerPixel = 4;
+static int WindowWidth = 640;
+static int WindowHeight = 480;
+static int BufferWidth = 640;
+static int BufferHeight = 480;
+static int BytesPerPixel = 4;
+
+void *BackBuffer;
 
 BOOL Fullscreen = FALSE;
+BITMAPINFO BitMapInfo = { 0 };
+HWND MainWindow;
 
 LRESULT CALLBACK MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 	LRESULT Result = 0;
@@ -66,7 +70,7 @@ void VID_Init(void) {
 
 	AdjustWindowRectEx(&r, dwExStyle, 0, dwStyle);
 
-	HWND mainwindow = CreateWindowEx(
+	MainWindow = CreateWindowEx(
 		dwExStyle, 
 		"Module 3", 
 		"Lesson 3.5", 
@@ -82,14 +86,28 @@ void VID_Init(void) {
 	);
 
 	if (Fullscreen) {
-		SetWindowLong(mainwindow, GWL_STYLE, 0);
+		SetWindowLong(MainWindow, GWL_STYLE, 0);
 	}
 
-	ShowWindow(mainwindow, SW_SHOWDEFAULT);
+	ShowWindow(MainWindow, SW_SHOWDEFAULT);
 
 	//HDC DeviceContext = GetDC(mainwindow);
 	//PatBlt(DeviceContext, 0, 0, BufferWidth, BufferHeight, BLACKNESS);
 	//ReleaseDC(mainwindow, DeviceContext);
+	BitMapInfo.bmiHeader.biSize = sizeof(BitMapInfo.bmiHeader);
+	BitMapInfo.bmiHeader.biWidth = BufferWidth;
+	BitMapInfo.bmiHeader.biHeight = -BufferHeight;
+	BitMapInfo.bmiHeader.biPlanes = 1;
+	BitMapInfo.bmiHeader.biBitCount = 8 * BytesPerPixel;
+	BitMapInfo.bmiHeader.biCompression = BI_RGB;
+
+	BackBuffer = malloc(BufferWidth * BufferHeight * BytesPerPixel);
+}
+
+void VID_Update(void) {
+	HDC dc = GetDC(MainWindow);
+	StretchDIBits(dc, 0, 0, WindowWidth, WindowHeight, 0, 0, BufferWidth, BufferHeight, BackBuffer, (BITMAPINFO*)&BitMapInfo, DIB_RGB_COLORS, SRCCOPY);
+	ReleaseDC(MainWindow, dc);
 }
 
 void VID_Shutdown(void) {
