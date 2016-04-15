@@ -75,23 +75,34 @@ pack_t *COM_LoadPackFile(char *Path) {
     return Pak;
 }
 
+searchpath_t *COM_SearchPaths = NULL;
+
 void COM_AddGameDirectory(const char *dir) {
     char buf[128];
     pack_t *pakptr;
+
     for(int i = 0;;i++) {
         sprintf(buf, "%s/PAK%d.PAK", dir, i);
         pakptr = COM_LoadPackFile(buf);
         if(!pakptr) break;
+        searchpath_t *newPath = (searchpath_t *)malloc(sizeof(searchpath_t));
+        newPath->Pack = pakptr;
+        newPath->Next = COM_SearchPaths;
+        COM_SearchPaths = newPath;
     }
 }
 
 int main(void) {
     COM_AddGameDirectory(".");
-    pack_t *Pak0 = COM_LoadPackFile("PAK0.PAK");
-    Sys_FileClose(Pak0->PackHandle);
-    printf("Number of files: %d\n", Pak0->NumberOfFiles);
+    //pack_t *Pak0 = COM_LoadPackFile("PAK0.PAK");
+    //Sys_FileClose(Pak0->PackHandle);
 
-    for(int i = 0; i < Pak0->NumberOfFiles; i++) {
-        printf("%04d: %- 56s [%d bytes]\n", i+1, Pak0->PakFiles[i].FileName, Pak0->PakFiles[i].FileLength);
+    for(searchpath_t *Pak = COM_SearchPaths; Pak != NULL; Pak = Pak->Next) {
+        pack_t *Pak0 = Pak->Pack;
+        printf("Number of files: %d\n", Pak0->NumberOfFiles);
+
+        for(int i = 0; i < Pak0->NumberOfFiles; i++) {
+            printf("%04d: %- 56s [%d bytes]\n", i+1, Pak0->PakFiles[i].FileName, Pak0->PakFiles[i].FileLength);
+        }
     }
 }
