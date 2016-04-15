@@ -66,7 +66,7 @@ int Sys_FileRead(int HandleIdx, void *Dest, int Count) {
     if(HandleIdx < 0 || HandleIdx >= MAX_HANDLES || Dest == 0) return 0;
     if(FileHandles[HandleIdx] == NULL) return -1;
 
-    return (int)fread(Dest, 1, Count, FileHandles[HandleIdx]);
+    return (int)fread(Dest, Count, 1, FileHandles[HandleIdx]);
 }
 
 int Sys_FileWrite(int HandleIdx, void *Source, int Count) {

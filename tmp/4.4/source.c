@@ -92,11 +92,28 @@ void COM_AddGameDirectory(const char *dir) {
     }
 }
 
+char *COM_FindFile(const char *filename, int *filesize) {
+    *filesize = 0;
+    if(!filename) return NULL;
+    for(searchpath_t *s = COM_SearchPaths; s != NULL; s = s->Next) {
+        pack_t *p = s->Pack;
+        for(int i = 0; i < p->NumberOfFiles; i++) {
+            if(strcmp(filename, p->PakFiles[i].FileName) == 0) {
+                *filesize = p->PakFiles[i].FileLength;
+                void *filedata = malloc(*filesize+1);
+                Sys_FileSeek(p->PackHandle, p->PakFiles[i].FilePosition);
+                Sys_FileRead(p->PackHandle, filedata, *filesize);
+                return (char *)filedata;
+            }
+        }
+    }
+    return NULL;
+}
+
 int main(void) {
     COM_AddGameDirectory(".");
-    //pack_t *Pak0 = COM_LoadPackFile("PAK0.PAK");
-    //Sys_FileClose(Pak0->PackHandle);
 
+    /*
     for(searchpath_t *Pak = COM_SearchPaths; Pak != NULL; Pak = Pak->Next) {
         pack_t *Pak0 = Pak->Pack;
         printf("Number of files: %d\n", Pak0->NumberOfFiles);
@@ -105,4 +122,16 @@ int main(void) {
             printf("%04d: %- 56s [%d bytes]\n", i+1, Pak0->PakFiles[i].FileName, Pak0->PakFiles[i].FileLength);
         }
     }
+    */
+
+    int len;
+    char *contents = COM_FindFile("--OMITTED--", &len);
+    if(len > 0) {
+        printf("size: %d bytes\n", len);
+        int idx = Sys_FileOpenWrite("--OMITTED--");
+        int out = Sys_FileWrite(idx, contents, len);
+        printf("wrote %d bytes\n", out);
+        Sys_FileClose(idx);
+    }
+    return 0;
 }
